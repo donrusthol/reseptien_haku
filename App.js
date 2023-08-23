@@ -1,49 +1,39 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Image, FlatList } from 'react-native';
+import React, { useState } from 'react';
+import axios from 'axios';
 
-export default function App() {
+const SearchRecipes = () => {
+  const [ingredient, setIngredient] = useState('');
   const [recipes, setRecipes] = useState([]);
 
-  useEffect(() => {
-    fetch('https://www.themealdb.com/api/json/v1/1/filter.php?i=tomato')
-      .then(response => response.json())
-      .then(data => setRecipes(data.meals))
-      .catch(error => console.error(error));
-  }, []);
+  const searchByIngredient = async () => {
+    try {
+      const response = await axios.get(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${ingredient}`);
+      setRecipes(response.data.meals);
+    } catch (error) {
+      console.error(`Error fetching recipes: ${error}`);
+    }
+  };
+
+  const handleInputChange = (event) => {
+    setIngredient(event.target.value);
+  };
+
+  const handleSearchClick = () => {
+    searchByIngredient();
+  };
 
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={recipes}
-        keyExtractor={item => item.idMeal}
-        renderItem={({ item }) => (
-          <View style={styles.item}>
-            <Text style={styles.title}>{item.strMeal}</Text>
-            <Image style={styles.image} source={{ uri: item.strMealThumb }} />
-          </View>
-        )}
-      />
-    </View>
+    <div>
+      <input type="text" value={ingredient} onChange={handleInputChange} placeholder="Kirjoita raaka-aine" />
+      <button onClick={handleSearchClick}>Hae reseptejä</button>
+      {recipes && recipes.map((recipe) => (
+        <div key={recipe.idMeal}>
+          <h2>{recipe.strMeal}</h2>
+          <img src={recipe.strMealThumb} alt={recipe.strMeal} />
+        </div>
+      ))}
+    </div>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  item: {
-    padding: 10,
-    marginVertical: 8,
-    marginHorizontal: 16,
-  },
-  title: {
-    fontSize: 32,
-  },
-  image: {
-    width: 100,
-    height: 100,
-  },
-});
+export default SearchRecipes;
